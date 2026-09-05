@@ -1,0 +1,42 @@
+backend/app/api/v1/routes/agent.py
+  s_bf5535f3374266::t_fb4625c06008fb 1-164
+backend/app/api/v1/routes/assets.py
+  s_bf5535f3374266::t_aa4a84e6b38c35 1-111
+backend/app/api/v1/routes/system.py
+  s_bf5535f3374266::t_58117ea1951eba 1-61
+backend/app/deps.py
+  s_bf5535f3374266::t_3d09fa8a8627b4 1-88
+backend/app/schemas/asset.py
+  s_bf5535f3374266::t_edf467986dba18 1-63
+backend/app/static/index.html
+  s_bf5535f3374266::t_abc3ec2811aa20 1-15
+backend/app/stores/fs.py
+  s_bf5535f3374266::t_fb4ae99141587d 1-215
+desktop/main.py
+  s_bf5535f3374266::t_a8e0abd622a073 1-83
+frontend/package-lock.json
+  s_bf5535f3374266::t_080a3efb3a3c82 1-1933
+frontend/vite.config.ts
+  s_bf5535f3374266::t_78f96a3f17a512 1-31
+run_desktop.py
+  s_bf5535f3374266::t_a9adce3ced6cf2 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.32",
+  "base_commit_sha": "9197739f3a7355c28f885caecd7d9b8e6f4121aa",
+  "prompts": {},
+  "sessions": {
+    "s_bf5535f3374266": {
+      "agent_id": {
+        "tool": "codebuddy",
+        "id": "9cb12598a5e94dfca455cf29f4394a51",
+        "model": "hy4-preview"
+      },
+      "human_author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>",
+      "custom_attributes": {
+        "internal_commit_event_allowlist": "codeup.aliyun.com,codeup-*"
+      }
+    }
+  }
+}
