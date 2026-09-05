@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Node / Frontend
+node_modules/
+dist/
+frontend/dist/
+
+# Local data & index (user data lives under ~/.nexus-agent, not in repo)
+*.db
+data/
+
+# Desktop build
+build/
+*.spec.bak
+
+# Env & OS
+.env
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.idea/
+.vscode/

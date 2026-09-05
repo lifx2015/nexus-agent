@@ -1,0 +1,19 @@
+# Nexus Agent - Backend dependencies
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+sqlmodel>=0.0.22
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-frontmatter>=1.1.0
+PyYAML>=6.0.2
+typer>=0.13.0
+python-multipart>=0.0.12
+
+# SkillHub 技能仓库（版本对比 / 一键更新）
+httpx>=0.27
+
+# 桌面壳（未安装时自动降级为浏览器打开）
+pywebview>=5.1
+
+# Agent 接入：MCP server（2.x，API 为 MCPServer）
+mcp>=2.0
