@@ -1,0 +1,14 @@
+README.md
+  h_2ac35923b83ec5 1-270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.32",
+  "base_commit_sha": "bcc462c75c69580581bfb58e7469d45a76fd6c36",
+  "prompts": {},
+  "humans": {
+    "h_2ac35923b83ec5": {
+      "author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>"
+    }
+  }
+}
