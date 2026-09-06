@@ -1,0 +1,84 @@
+frontend/src/views/AssetView.vue
+  s_5d2139cac65aad::t_2e9f7d55c7dca0 8
+  s_5d2139cac65aad::t_48e8f1c6279814 280-288
+  s_5d2139cac65aad::t_618f1d6dd02a28 525-533
+  s_5d2139cac65aad::t_5e254f7e52a40f 374,383
+backend/app/static/assets/SettingsView-CFnIuxx4.js
+  s_5d2139cac65aad::t_2957841e48bc3d 1
+backend/app/static/assets/ProjectsView-CgM-S7z_.js
+  s_5d2139cac65aad::t_d0598436b514d9 1
+backend/app/static/assets/DashboardView-DSjlipFZ.css
+  s_5d2139cac65aad::t_d0598436b514d9 1
+backend/app/static/assets/AssetView-lTwkrBnX.css
+  s_5d2139cac65aad::t_2957841e48bc3d 1
+frontend/src/views/DashboardView.vue
+  s_5d2139cac65aad::t_16bd49bf5af942 52-58,69-73,76,78-79,83-92
+  s_5d2139cac65aad::t_8ca75cc2dcfd4b 191-199
+  s_5d2139cac65aad::t_c768627d7527a6 352-353
+  s_5d2139cac65aad::t_db222a4a9314ee 204-219,221-227,231-255
+  s_5d2139cac65aad::t_433affe8dfeaec 373-381,383
+  s_5d2139cac65aad::t_6163f721bcb5a6 165
+  s_5d2139cac65aad::t_2ab34e0aa0f2b3 144-163,169-170
+  s_5d2139cac65aad::t_72e1c7fc6b76ea 459
+  s_5d2139cac65aad::t_e789e85258fcd8 464-549
+  s_5d2139cac65aad::t_51811d6a8ff493 93
+  s_5d2139cac65aad::t_be9e50c6e3fef6 256
+backend/tests/test_skills_deploy.py
+  s_5d2139cac65aad::t_794e054f024b9e 42-43,47-51,56
+  s_5d2139cac65aad::t_316ca91115f6fc 1-41,44-46,52-55,57-97
+backend/app/static/assets/client-DXxNSxxb.js
+  s_5d2139cac65aad::t_2957841e48bc3d 1-9
+backend/app/scanners/agents.py
+  s_5d2139cac65aad::t_b9f6926aef4c83 174-197
+backend/app/skills/__init__.py
+  s_5d2139cac65aad::t_0bcb2eb5b576c3 1-9
+backend/app/static/assets/index-CNSG2QgQ.js
+  s_5d2139cac65aad::t_d0598436b514d9 1-2
+frontend/src/api/client.ts
+  s_5d2139cac65aad::t_3440d75fcf3d7e 265-312
+backend/app/scanners/engine.py
+  s_5d2139cac65aad::t_25bab401cd7e66 111
+backend/app/static/index.html
+  s_5d2139cac65aad::t_d0598436b514d9 7
+backend/app/skills/deploy.py
+  s_5d2139cac65aad::t_55d429351bdd77 125-126
+  s_5d2139cac65aad::t_5ac95898b64214 1-124,127-212
+backend/app/api/v1/routes/skills_share.py
+  s_5d2139cac65aad::t_b1f5fe68dc827b 1-42,44-59,61-72
+  s_5d2139cac65aad::t_3ec2a7fe719086 43,60
+backend/app/static/assets/AssetView-pACigltm.js
+  s_5d2139cac65aad::t_d0598436b514d9 1-67
+backend/app/static/assets/DashboardView-DPhW1nWB.js
+  s_5d2139cac65aad::t_d0598436b514d9 1
+backend/app/static/assets/ScanView-CW6RmkNq.js
+  s_5d2139cac65aad::t_d0598436b514d9 1
+backend/app/static/assets/SkillsView-rEgntt0K.js
+  s_5d2139cac65aad::t_d0598436b514d9 1
+backend/app/static/assets/UsageView-j7yDTByD.js
+  s_5d2139cac65aad::t_2957841e48bc3d 1-2
+frontend/src/components/SkillShareDialog.vue
+  s_5d2139cac65aad::t_609aa0c6c383d5 1-236
+backend/app/static/assets/ScanProgress-BYCANzdm.js
+  s_5d2139cac65aad::t_d0598436b514d9 1
+backend/app/main.py
+  s_5d2139cac65aad::t_2157ddb6ba4b31 1-19,21-72,74-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.32",
+  "base_commit_sha": "01852aa7ffc093a97983419f1d1697ef0d0c2269",
+  "prompts": {},
+  "sessions": {
+    "s_5d2139cac65aad": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_218ae2f5-d8f2-4e56-93aa-2863e117407c",
+        "model": "unknown"
+      },
+      "human_author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>",
+      "custom_attributes": {
+        "internal_commit_event_allowlist": "codeup.aliyun.com,codeup-*"
+      }
+    }
+  }
+}
