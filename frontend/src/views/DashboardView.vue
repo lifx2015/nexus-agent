@@ -49,8 +49,13 @@ const hub = ref<{ summary: HubCompareSummary | null; created_at: string | null }
   created_at: null,
 })
 
-function enabledCount(kind: string) {
-  return stats.value.by_kind[kind]?.enabled ?? 0
+function discoveredCount(kind: string) {
+  return discovered.value?.by_kind?.[kind] ?? 0
+}
+
+/** 卡片主数值 = 自建 + 收录（收录即扫描发现的本机资产） */
+function kindTotal(kind: string) {
+  return (stats.value.totals[kind] ?? 0) + discoveredCount(kind)
 }
 
 const topScanKinds = computed(() => {
@@ -61,13 +66,30 @@ const topScanKinds = computed(() => {
     .slice(0, 4)
 })
 
+// ---- 扫描状态 ---------------------------------------------------------------
+// 注意：扫描任务状态存于后端内存，应用重启后为 idle；是否「扫描过」须结合已入库的发现资产判断
+const scanning = ref(false)
+let scanTimer: number | null = null
+
 const scanStateLabel = computed(() => {
   const st = scanJob.value?.state
-  if (st === 'running') return '扫描中'
+  if (scanning.value || st === 'running') return '扫描中…'
   if (st === 'error') return '上次扫描出错'
-  if (scanJob.value?.finished) return '扫描正常'
+  if (scanJob.value?.finished || scanJob.value?.state === 'done') return '扫描正常'
+  if ((discovered.value?.total ?? 0) > 0) return '已扫描'
   return '尚未扫描'
 })
+
+const scanStateClass = computed(() => {
+  if (scanning.value || scanJob.value?.state === 'running') return 'nx-pill--scanning'
+  if (scanJob.value?.state === 'error') return 'nx-pill--danger'
+  if (scanJob.value?.finished || scanJob.value?.state === 'done') return 'nx-pill--success'
+  if ((discovered.value?.total ?? 0) > 0) return 'nx-pill--success'
+  return 'nx-pill--muted'
+})
+
+/** 首次使用（从未扫描过且没有任何发现资产）：只展示扫描引导 */
+const heroMode = computed(() => !loading.value && (discovered.value?.total ?? 0) === 0)
 
 const maxProjectTokens = computed(() =>
   topProjects.value.reduce((m, p) => Math.max(m, p.tokens), 0),
@@ -119,12 +141,33 @@ async function load() {
   loading.value = false
 }
 
+async function pollScan() {
+  if (scanTimer) window.clearTimeout(scanTimer)
+  scanTimer = window.setTimeout(async () => {
+    scanTimer = null
+    try {
+      const job = await scanApi.status()
+      scanJob.value = job
+      if (job.state === 'running') {
+        await pollScan()
+      } else {
+        scanning.value = false
+        ElMessage.success('扫描完成')
+        await load()
+      }
+    } catch {
+      scanning.value = false
+    }
+  }, 1200)
+}
+
 async function runScan() {
+  if (scanning.value) return
   busyAction.value = 'scan'
   try {
     await scanApi.run()
-    ElMessage.success('已触发扫描，稍后刷新查看结果')
-    setTimeout(() => load(), 3000)
+    scanning.value = true
+    pollScan()
   } catch (e) {
     ElMessage.error(errorMessage(e))
   } finally {
@@ -145,32 +188,71 @@ async function syncUsage() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load().then(() => {
+    // 进入页面时若已有扫描任务在跑（比如从扫描中心发起后切回来），接管进度轮询
+    if (scanJob.value?.state === 'running') {
+      scanning.value = true
+      pollScan()
+    }
+  })
+})
 </script>
 
 <template>
   <div v-loading="loading" class="nx-page">
-    <!-- 四类资产统计 -->
-    <div class="nx-stat-grid">
-      <div
-        v-for="k in KIND_LIST"
-        :key="k"
-        class="nx-stat"
-        tabindex="0"
-        :style="{ '--stat-color': KIND_META[k].color } as Record<string, string>"
-        @click="k === 'skill' ? router.push('/skills') : router.push(`/assets/${k}`)"
-        @keydown.enter="k === 'skill' ? router.push('/skills') : router.push(`/assets/${k}`)"
+    <!-- 首次使用引导：尚未扫描过时只展示扫描入口，扫完自动进入完整概览 -->
+    <div v-if="heroMode" class="hero-card">
+      <div class="hero-icon">
+        <el-icon :size="30"><Aim /></el-icon>
+      </div>
+      <div class="hero-title">欢迎使用 Nexus Agent</div>
+      <div class="hero-desc">
+        先扫描一次本机：检测已安装的 AI 编程智能体，收录它们的技能、规范、记忆与配置资产，
+        并回溯 AI 项目与用量统计。全部数据只在本机处理，不会上传。
+      </div>
+      <el-button
+        type="primary"
+        size="large"
+        :loading="scanning || busyAction === 'scan'"
+        class="hero-btn"
+        @click="runScan"
       >
-        <div class="nx-stat-icon">
-          <el-icon :size="19"><component :is="KIND_META[k].icon" /></el-icon>
-        </div>
-        <div class="nx-stat-body">
-          <div class="nx-stat-label">{{ KIND_META[k].label }}</div>
-          <div class="nx-stat-value">{{ stats.totals[k] ?? 0 }}</div>
-          <div class="nx-stat-sub">{{ enabledCount(k) }} 条启用 · {{ KIND_META[k].desc }}</div>
-        </div>
+        <el-icon v-if="!(scanning || busyAction === 'scan')" style="margin-right: 6px"><Refresh /></el-icon>
+        {{ scanning ? '正在扫描本机…' : '立即扫描本机' }}
+      </el-button>
+      <div class="hero-hint">
+        <template v-if="scanning">正在检测本机 Agent 与资产，完成后本页自动刷新…</template>
+        <template v-else-if="agentsDetected">已检测到 {{ agentsDetected }} 个本机 Agent，随时可以开始</template>
+        <template v-else>扫描通常只需几秒钟</template>
       </div>
     </div>
+
+    <template v-else>
+      <!-- 四类资产统计（自建 + 扫描收录） -->
+      <div class="nx-stat-grid">
+        <div
+          v-for="k in KIND_LIST"
+          :key="k"
+          class="nx-stat"
+          tabindex="0"
+          :style="{ '--stat-color': KIND_META[k].color } as Record<string, string>"
+          :title="KIND_META[k].desc"
+          @click="k === 'skill' ? router.push('/skills') : router.push(`/assets/${k}`)"
+          @keydown.enter="k === 'skill' ? router.push('/skills') : router.push(`/assets/${k}`)"
+        >
+          <div class="nx-stat-icon">
+            <el-icon :size="19"><component :is="KIND_META[k].icon" /></el-icon>
+          </div>
+          <div class="nx-stat-body">
+            <div class="nx-stat-label">{{ KIND_META[k].label }}</div>
+            <div class="nx-stat-value">{{ kindTotal(k) }}</div>
+            <div class="nx-stat-sub">
+              自建 {{ stats.totals[k] ?? 0 }} · 收录 {{ discoveredCount(k) }}
+            </div>
+          </div>
+        </div>
+      </div>
 
     <div class="nx-dash-cols">
       <!-- 主列：最近更新 + 项目用量 -->
@@ -267,7 +349,8 @@ onMounted(load)
             <el-icon color="#22d3ee"><Aim /></el-icon>
             <span class="nx-card-title">扫描中心</span>
             <span class="nx-spacer" />
-            <span class="nx-pill" :class="scanStateLabel === '扫描正常' ? 'nx-pill--success' : 'nx-pill--muted'">
+            <span class="nx-pill" :class="scanStateClass">
+              <i v-if="scanning || scanJob?.state === 'running'" class="scan-spinner" />
               {{ scanStateLabel }}
             </span>
           </div>
@@ -287,8 +370,17 @@ onMounted(load)
             </span>
           </div>
           <div class="nx-side-actions">
-            <el-button size="small" :loading="busyAction === 'scan'" @click="runScan">立即扫描</el-button>
+            <el-button
+              size="small"
+              :type="scanning ? 'primary' : 'default'"
+              :loading="scanning || busyAction === 'scan'"
+              class="scan-btn"
+              @click="runScan"
+            >
+              {{ scanning ? '扫描中…' : '立即扫描' }}
+            </el-button>
             <el-button size="small" text type="primary" @click="router.push('/scan')">进入扫描中心</el-button>
+            <span v-if="scanning" class="scan-live">正在检测本机 Agent 与资产…</span>
           </div>
         </div>
 
@@ -364,10 +456,97 @@ onMounted(load)
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
+/* ---- 首次使用引导 ---- */
+.hero-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 72px 32px 64px;
+  border: 1px solid var(--nx-border-soft);
+  border-radius: var(--nx-r-lg, 16px);
+  background:
+    radial-gradient(600px 200px at 50% -60px, var(--nx-accent-soft, rgba(79, 140, 255, 0.12)), transparent),
+    var(--nx-bg-card, var(--nx-bg-soft));
+}
+.hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nx-accent, #4f8cff);
+  background: var(--nx-accent-soft, rgba(79, 140, 255, 0.14));
+  margin-bottom: 18px;
+}
+.hero-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.hero-desc {
+  margin-top: 10px;
+  max-width: 520px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--nx-text-dim);
+}
+.hero-btn {
+  margin-top: 24px;
+  min-width: 200px;
+  height: 42px;
+  font-size: 14px;
+}
+.hero-hint {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--nx-text-faint);
+}
+
+/* ---- 扫描中的高亮状态 ---- */
+.nx-pill--scanning {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nx-accent, #4f8cff);
+  background: var(--nx-accent-soft, rgba(79, 140, 255, 0.14));
+  border: 1px solid var(--nx-accent, #4f8cff);
+  font-weight: 600;
+  animation: scan-pulse 1.4s ease-in-out infinite;
+}
+@keyframes scan-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.scan-spinner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: scan-spin 0.8s linear infinite;
+}
+@keyframes scan-spin {
+  to { transform: rotate(360deg); }
+}
+.scan-btn {
+  min-width: 104px;
+  font-weight: 600;
+}
+.scan-live {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nx-accent, #4f8cff);
+  animation: scan-pulse 1.4s ease-in-out infinite;
+  margin-left: auto;
+}
+
 .nx-dash-cols {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;

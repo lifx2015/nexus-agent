@@ -108,7 +108,7 @@ def classify(path: Path) -> ItemKind:
         return ItemKind.MEMORY
     if name in {
         "claude.md", "agents.md", "gemini.md", "codex.md", "opencode.md",
-        "copilot-instructions.md", "ai-rules.md",
+        "soul.md", "copilot-instructions.md", "ai-rules.md",
     } or name.endswith((".cursorrules", ".windsurfrules", ".clinerules", ".roorules")):
         return ItemKind.RULE
     if suffix == ".mdc" or {"rules", "steering", "instructions", "prompts"} & parts:

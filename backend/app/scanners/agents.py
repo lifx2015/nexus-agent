@@ -171,6 +171,30 @@ SPECS: list[AgentSpec] = [
         project_dirs=[".zcode"],
         project_files=[],
     ),
+    AgentSpec(
+        key="openclaw",
+        name="OpenClaw",
+        vendor="Steipete",
+        global_dirs=["~/.openclaw"],
+        project_dirs=[".openclaw"],
+        project_files=["AGENTS.md", "SOUL.md"],
+    ),
+    AgentSpec(
+        key="hermes",
+        name="Hermes",
+        vendor="NousResearch",
+        global_dirs=["~/.hermes", "%LOCALAPPDATA%/hermes"],
+        project_dirs=[".hermes"],
+        project_files=["AGENTS.md", "SOUL.md"],
+    ),
+    AgentSpec(
+        key="pi",
+        name="Pi Coding Agent",
+        vendor="Mario Zechner",
+        global_dirs=["~/.pi"],
+        project_dirs=[".pi"],
+        project_files=["AGENTS.md"],
+    ),
     # 跨工具共享的 Agent Skills 目录（agentskills 约定：~/.agents/skills/<name>/SKILL.md）
     AgentSpec(
         key="agent-skills",

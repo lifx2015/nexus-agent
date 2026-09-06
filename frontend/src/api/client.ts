@@ -262,6 +262,54 @@ export const skillhubApi = {
     api.post<HubUpdateResult>('/skillhub/update', { record_id, version, backup }).then((r) => r.data),
 }
 
+// ---- 技能跨智能体复用 --------------------------------------------------------
+export interface ShareTargetStatus {
+  key: string
+  name: string
+  dir: string
+  exists: boolean
+  installed: boolean
+  is_source: boolean
+}
+
+export interface ShareStatus {
+  skill_name: string
+  source_dir: string
+  targets: ShareTargetStatus[]
+}
+
+export interface ShareDeployResult {
+  key: string
+  ok: boolean
+  dir?: string
+  backup_dir?: string
+  error?: string
+  skipped?: boolean
+  detail?: string
+}
+
+export const shareApi = {
+  status: (src: 'own' | 'track', id: number | string) =>
+    api.get<ShareStatus>('/skills/share/status', { params: { src, id } }).then((r) => r.data),
+  deploy: (src: 'own' | 'track', id: number | string, targets: string[], overwrite = false) =>
+    api
+      .post<{ results: ShareDeployResult[] }>('/skills/share/deploy', {
+        src,
+        id,
+        targets,
+        overwrite,
+      })
+      .then((r) => r.data.results),
+  remove: (src: 'own' | 'track', id: number | string, target: string) =>
+    api
+      .post<{ ok: boolean; dir: string; backup_dir: string }>('/skills/share/remove', {
+        src,
+        id,
+        target,
+      })
+      .then((r) => r.data),
+}
+
 export function errorMessage(e: unknown): string {
   if (axios.isAxiosError(e)) {
     const detail = (e.response?.data as { detail?: string } | undefined)?.detail

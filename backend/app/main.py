@@ -15,6 +15,7 @@ from app.api.v1.routes import assets as assets_routes
 from app.api.v1.routes import projects as projects_routes
 from app.api.v1.routes import scan as scan_routes
 from app.api.v1.routes import skillhub as skillhub_routes
+from app.api.v1.routes import skills_share as skills_share_routes
 from app.api.v1.routes import system as system_routes
 from app.api.v1.routes import usage as usage_routes
 from app.core.config import APP_NAME, APP_VERSION, settings
@@ -67,6 +68,7 @@ app.include_router(system_routes.router)
 app.include_router(agent_routes.router)
 app.include_router(scan_routes.router)
 app.include_router(skillhub_routes.router)
+app.include_router(skills_share_routes.router)
 app.include_router(projects_routes.router)
 app.include_router(usage_routes.router)
 

@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { assetsApi, discoveredApi, errorMessage } from '@/api/client'
 import type { Asset, DiscoveredRecord } from '@/api/client'
 import SkillPreview from '@/components/SkillPreview.vue'
+import SkillShareDialog from '@/components/SkillShareDialog.vue'
 import { AGENT_COLORS, KIND_META, STATUS_LIST, STATUS_META } from '@/constants'
 import type { AssetKind, AssetStatus } from '@/constants'
 
@@ -276,6 +277,15 @@ function openPreview(row: Row) {
   }
   previewVisible.value = true
 }
+
+// ---- 技能跨智能体复用 -------------------------------------------------------
+const shareVisible = ref(false)
+const shareRow = ref<Row | null>(null)
+
+function openShare(row: Row) {
+  shareRow.value = row
+  shareVisible.value = true
+}
 </script>
 
 <template>
@@ -361,6 +371,7 @@ function openPreview(row: Row) {
                 <template v-if="row.src === 'own'">
                   <button class="nx-link nx-link--primary" @click="openPreview(row)">预览</button>
                   <button class="nx-link nx-link--primary" @click="openEdit(row)">编辑</button>
+                  <button class="nx-link" @click="openShare(row)">复用</button>
                   <button class="nx-link nx-link--danger" @click="remove(row)">删除</button>
                 </template>
                 <template v-else>
@@ -369,6 +380,7 @@ function openPreview(row: Row) {
                     {{ row.starred ? '去星' : '星标' }}
                   </button>
                   <button class="nx-link" @click="openTracked(row, 'dir')">目录</button>
+                  <button class="nx-link nx-link--primary" @click="openShare(row)">复用</button>
                 </template>
               </div>
             </div>
@@ -510,6 +522,15 @@ function openPreview(row: Row) {
     </el-drawer>
 
     <SkillPreview v-model="previewVisible" v-bind="preview" />
+
+    <!-- 技能跨智能体复用对话框 -->
+    <SkillShareDialog
+      v-if="shareRow"
+      v-model="shareVisible"
+      :src="shareRow.src"
+      :id="shareRow.id"
+      :skill-name="shareRow.name"
+    />
   </div>
 </template>
 
