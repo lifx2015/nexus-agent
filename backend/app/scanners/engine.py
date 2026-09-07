@@ -111,7 +111,7 @@ def classify(path: Path) -> ItemKind:
         "soul.md", "copilot-instructions.md", "ai-rules.md",
     } or name.endswith((".cursorrules", ".windsurfrules", ".clinerules", ".roorules")):
         return ItemKind.RULE
-    if suffix == ".mdc" or {"rules", "steering", "instructions", "prompts"} & parts:
+    if suffix == ".mdc" or {"rules", "rule", "steering", "instructions", "prompts"} & parts:
         return ItemKind.RULE
     if "sessions" in parts or suffix == ".jsonl":
         return ItemKind.SESSION

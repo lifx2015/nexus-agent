@@ -1,4 +1,4 @@
-# Nexus Agent ·AI 360 卫士
+﻿# Nexus Agent ·AI 360 卫士
 
 **AI 360 卫士** 式的本机智能体管家 —— 扫描本机所有 AI 编程智能体留下的数据痕迹（技能 / 记忆 / 规范 / 配置 / 会话），
 统一盘点、跟踪、加工管理；同时内置一份可被 AI 自己读写的 Markdown 资产库。**数据全部留在本机，绝不外传。**
@@ -20,7 +20,7 @@
 
 | 能力 | 说明 |
 |:--|:--|
-| 🔍 **AI 360 卫士（扫描中心）** | 只读盘点 21 家本机智能体的数据痕迹，统一跟踪管理 |
+| 🔍 **AI 360 卫士（扫描中心）** | 只读盘点 22 家本机智能体的数据痕迹，统一跟踪管理 |
 | 📚 **自有资产库** | 人 + AI 共用的 Markdown 资产库（tools / memory / rules / skills），文件即事实源 |
 | 📊 **流量统计** | 只读解析会话日志，统计每次模型调用的真实 token 消耗 |
 | 🧩 **技能仓库** | 对接 SkillHub.cn，本地技能 ↔ 仓库版本对比、一键更新（自动备份） |
@@ -36,7 +36,7 @@
 ## 截图一览
 
 <details open>
-<summary><b>扫描中心 —— 本机智能体资产盘点（21 家支持，本机实测 1213 条 / 约 2 秒）</b></summary>
+<summary><b>扫描中心 —— 本机智能体资产盘点（22 家支持，本机实测 1213 条 / 约 2 秒）</b></summary>
 <br>
 <p align="center"><img src="docs/screenshots/scan.png" width="960" /></p>
 </details>
@@ -92,6 +92,10 @@ cd ..
 python run_desktop.py
 ```
 
+# 打包
+cd frontend && npm run build        # 前端有改动时先构建
+backend/.venv/Scripts/pyinstaller --noconfirm NexusAgent.spec
+
 服务默认监听 `http://127.0.0.1:8721`，数据目录默认 `~/.nexus-agent`
 （可用环境变量 `NEXUS_DATA_HOME` 修改，设置页可切换）。
 
@@ -109,7 +113,7 @@ python run_desktop.py
             ┌───────────────────────────┼────────────────────────────┐
             │ 自有资产库                    │ 扫描与跟踪(AI 360 卫士)          │
    assets/{tools,memory,rules,skills}  scanners/{agents,engine,manager}
-            │(文件=事实源)                 │ agent 适配器(21 家) → 发现项
+            │(文件=事实源)                 │ agent 适配器(22 家) → 发现项
         SQLite 索引(assets 表)          discovered 表(只存路径/摘要，不存正文)
             │                            │
         /api/v1/agent/* + MCP            /api/v1/scan/* + /api/v1/discovered/*
@@ -125,10 +129,11 @@ python run_desktop.py
 
 启动后进入「扫描中心」→ 点「扫描本机」，只读盘点本机各智能体的数据目录。
 
-受支持（21 家，数据驱动可扩展）：
+受支持（22 家，数据驱动可扩展）：
 Claude Code · Cursor · CodeBuddy · Gemini CLI · Codex CLI · Windsurf · Cline ·
 Roo Code · Continue · GitHub Copilot · Trae · Kiro · Qoder · WorkBuddy ·
-OpenCode · Amp · Droid · Zed · ZCode · Agent Skills（`~/.agents` 共享目录）· 通用规则文件兜底
+OpenCode · Amp · Droid · Zed · ZCode · 华为码道（CodeArts Space，`~/.codeartswork`；兼容 `~/.codeartsdoer`）·
+Agent Skills（`~/.agents` 共享目录）· 通用规则文件兜底
 
 **加工处理**（engine.py）：
 - 噪声过滤：lock/log/backup/cache/隐藏文件等运行时垃圾不入库
@@ -151,11 +156,17 @@ AI 通过 REST `/api/v1/agent/*` 或 MCP 读写。详见上文架构。
 本机智能体的会话日志里已记录每次模型调用的 token 消耗，「流量统计」页**只读解析**这些日志
 （绝不修改原文件），归一后入库展示：
 
-- 支持解析（6 家，实测本机数据）：**Claude Code**（`~/.claude/projects` JSONL）· **Codex CLI**（`~/.codex/sessions`，
+- 支持解析（8 家，实测本机数据）：**Claude Code**（`~/.claude/projects` JSONL）· **Codex CLI**（`~/.codex/sessions`，
   `token_count` 事件）· **Gemini CLI**（`~/.gemini/tmp/*/chats`）· **OpenCode**（`opencode.db` 只读）·
   **ZCode**（`~/.zcode/cli/rollout` model-io JSONL，逐调用 usage）· **WorkBuddy**（`~/.workbuddy/traces`，
-  轮次聚合口径：token 量真实、请求数按 workflow 轮计）
-- 无法支持：Trae / Qoder / CodeBuddy —— 会话存储不记录逐调用 token usage，本地无数据源
+  轮次聚合口径：token 量真实、请求数按 workflow 轮计）· **华为码道**（Space 内核
+  `~/.codeartswork/kernel/sessions` 逐调用 usage JSONL，meta.json 兜底模型/项目归因；
+  兼容 IDE 模式 `~/.codeartsdoer/{codearts-data,vscode-data}/opencode.db` OpenCode 同构库双库合并，
+  token 语义各按其源写入侧归一）· **CodeBuddy**（IDE 扩展日志
+  `%APPDATA%/CodeBuddy CN/logs` 的 `notifyStepEnd` 逐 step usage，按行序
+  `ModelProvider initialized` 归因模型；inputTokens 含缓存 → fresh 单列，
+  请求数按 step 计、session 为 requestId）
+- 无法支持：Trae / Qoder —— 会话存储不记录逐调用 token usage，本地无数据源
 - 语义归一：Anthropic 的 input 不含缓存、OpenAI/Gemini 的 input 含缓存——写入侧统一为
   fresh 输入 + 缓存读/写单列（写侧一次归一，读侧免换算）
 - 增量同步：JSONL 按字节游标只读新增（半截尾行不提交）；按 mtime/水位跳过未变文件；
@@ -187,16 +198,17 @@ AI 通过 REST `/api/v1/agent/*` 或 MCP 读写。详见上文架构。
 - **识别来源**（数据驱动提取器，新增 Agent = 加一个 `projects/discover.py` 提取器）：
   Claude Code（`~/.claude/projects` 行内 `cwd` 权威、转义目录名解码兜底）· Codex CLI（rollout
   `session_meta.cwd`）· OpenCode（`opencode.db` `session.directory`）· WorkBuddy（`~/.workbuddy/projects`
-  行内 `cwd`）· Qoder（`~/.qoder/projects` 目录名解码）；指定 `project_roots` 时附加标记文件扫描
+  行内 `cwd`）· Qoder（`~/.qoder/projects` 目录名解码）· 华为码道（Space `meta.json`
+  `working_directory`；`~/.codeartsdoer` 两库 `session.directory` 合并提取）；指定 `project_roots` 时附加标记文件扫描
   （CLAUDE.md / AGENTS.md / .claude 等，复用扫描中心 SPECS）
 - **成本可控**：每个会话文件只读首行（或仅查索引库），不做全文扫描
-- **用量归因**：`usage_records.project` 由适配器写入侧归一（opencode/claude/codex），
+- **用量归因**：`usage_records.project` 由适配器写入侧归一（opencode/claude/codex/codearts），
   其余（WorkBuddy、历史数据）经 `project_sessions`（会话→项目）映射幂等回填——
   项目列表直接展示每个项目的累计调用次数与 token 总量
 - **跟踪管理**：列表/搜索/按智能体·状态筛选，星标、备注、标签、改名；「校验路径」
   检测项目目录是否存在；手动登记项目；「排除」后扫描不再复活（可恢复）
 - **多方式打开**：项目行「打开」下拉——资源管理器 / VS Code / Cursor / Trae / Windsurf /
-  Qoder 直接打开项目，CLI 智能体（OpenCode / Codex / Claude Code / Gemini）在项目目录
+  Qoder 直接打开项目，CLI 智能体（OpenCode / Codex / Claude Code / Gemini / 码道）在项目目录
   开新终端启动；可选项按本机 PATH 自动检测，未安装的置灰
 
 ## API 一览
@@ -248,7 +260,7 @@ AI 通过 REST `/api/v1/agent/*` 或 MCP 读写。详见上文架构。
 ## 路线图
 
 - [x] M1-M6 后端骨架 / 数据层 / API / Vue3 工作台 / pywebview 桌面壳 / Agent 接入（HTTP + MCP）
-- [x] M7 AI 360 扫描中心（21 家适配 + 加工 + 跟踪库 + UI）
+- [x] M7 AI 360 扫描中心（22 家适配 + 加工 + 跟踪库 + UI）
 - [x] M8 流量统计（6 家会话 token 解析 + 增量同步 + 仪表盘）
 - [x] M9 技能仓库（SkillHub 关联 + 版本对比 + 一键更新）
 - [x] M10 项目管理（会话日志回溯 + 用量归因 + 跟踪 UI）

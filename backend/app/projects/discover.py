@@ -229,6 +229,61 @@ class QoderProjects(BaseProjectExtractor):
         return out
 
 
+# ---- 华为码道（CodeArts Agent）-------------------------------------------
+# ~/.codeartsdoer/{codearts-data,vscode-data}/opencode.db：OpenCode 同构库，
+# session 表直接带 directory 列；IDE/Space 两库可能并存，合并提取。
+# Space 模式另有 ~/.codeartswork/kernel/sessions/<项目>/<会话>/meta.json
+# （working_directory 权威），一并提取。
+@register
+class CodeArtsProjects(BaseProjectExtractor):
+    agent = "codearts"
+
+    def extract(self) -> list[SessionRef]:
+        from app.usage.adapters.codearts import _codearts_db_paths, _space_session_dirs
+
+        out: list[SessionRef] = []
+        for db_path in _codearts_db_paths():
+            try:
+                conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            except sqlite3.Error:
+                continue
+            try:
+                rows = conn.execute(
+                    "SELECT id, directory, time_updated FROM session "
+                    "WHERE directory IS NOT NULL AND directory != ''"
+                ).fetchall()
+            except sqlite3.Error:
+                continue
+            finally:
+                conn.close()
+            for sid, directory, time_updated in rows:
+                ts = int(time_updated or 0)
+                if ts > 100_000_000_000:  # 毫秒 → 秒
+                    ts //= 1000
+                out.append(SessionRef(project=str(Path(directory)), session_id=sid, ts=ts))
+
+        for sdir in _space_session_dirs():
+            try:
+                meta = json.loads((sdir / "meta.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if not isinstance(meta, dict):
+                continue
+            wd = meta.get("working_directory")
+            if not isinstance(wd, str) or not wd:
+                continue
+            ts = (
+                parse_ts(meta.get("updated_at") or meta.get("created_at"))
+                or int(sdir.stat().st_mtime)
+            )
+            out.append(SessionRef(
+                project=str(Path(wd)),
+                session_id=str(meta.get("session_id") or sdir.name),
+                ts=ts,
+            ))
+        return out
+
+
 # ---- 标记文件扫描（用户指定项目根时）---------------------------------------
 # 文件名 → 归属 Agent：只被一家具体 Agent 认领的归它（CLAUDE.md → claude-code），
 # 多家共用的（AGENTS.md）归 generic

@@ -424,7 +424,7 @@ onMounted(() => {
                   </el-icon>
                 </div>
                 <div class="nx-lv-guide-note">
-                  按近 30 天真实处理 tokens 计算（输入+输出+缓存），10B+ 为满级王者。
+                  按近 30 天真实处理 tokens 计算（输入+输出+缓存），15B+ 为满级王者。
                 </div>
               </div>
             </el-popover>

@@ -105,6 +105,12 @@ CATALOG: list[dict] = [
         "globs": ["%APPDATA%/npm/gemini*.cmd", "~/.local/bin/gemini*"],
         "arg_mode": "none",
     },
+    {
+        "key": "codearts", "label": "华为码道", "kind": "agent", "bin": "codearts",
+        "keywords": ["码道", "codearts"],
+        "globs": ["%APPDATA%/npm/codearts*.cmd", "~/.local/bin/codearts*"],
+        "arg_mode": "path",  # codearts CLI 接受项目路径参数（进入 TUI 开发模式）
+    },
 ]
 
 

@@ -14,6 +14,7 @@ import pytest
 
 from app.projects.discover import (
     ClaudeCodeProjects,
+    CodeArtsProjects,
     CodexProjects,
     OpenCodeProjects,
     QoderProjects,
@@ -141,6 +142,64 @@ def test_qoder_dirname_only(tmp_path, monkeypatch):
     expected = "D:\\dev\\Qoder" if os.name == "nt" else "/D/dev/Qoder"
     assert refs[0].project == expected
     assert refs[0].session_id is None  # 无行级数据，只有项目
+
+
+# ---- 华为码道（CodeArts Agent）提取器 --------------------------------------
+def test_codearts_two_dbs_merged(tmp_path, monkeypatch):
+    doer = tmp_path / ".codeartsdoer"
+    for sub in ("codearts-data", "vscode-data"):
+        db = doer / sub / "opencode.db"
+        db.parent.mkdir(parents=True)
+        conn = sqlite3.connect(db)
+        conn.executescript(
+            "CREATE TABLE session(id TEXT PRIMARY KEY, directory TEXT, time_updated INTEGER);"
+        )
+        conn.execute(
+            "INSERT INTO session VALUES(?, 'F:/workspace/demo', 1700000000000)",
+            (f"cs-{sub}",),
+        )
+        conn.commit()
+        conn.close()
+    monkeypatch.setenv("CODEARTS_DOER_HOME", str(doer))
+    refs = CodeArtsProjects().extract()
+    assert len(refs) == 2
+    assert {r.session_id for r in refs} == {"cs-codearts-data", "cs-vscode-data"}
+    assert all(r.project == str(Path("F:/workspace/demo")) for r in refs)
+    assert all(r.ts == 1700000000 for r in refs)  # 毫秒 → 秒
+
+
+def test_codearts_empty_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("CODEARTS_DOER_HOME", str(tmp_path / "no-doer"))
+    assert CodeArtsProjects().extract() == []
+
+
+# ---- 华为码道（CodeArts Agent）提取器 --------------------------------------
+def test_codearts_two_dbs_merged(tmp_path, monkeypatch):
+    doer = tmp_path / ".codeartsdoer"
+    for sub in ("codearts-data", "vscode-data"):
+        db = doer / sub / "opencode.db"
+        db.parent.mkdir(parents=True)
+        conn = sqlite3.connect(db)
+        conn.executescript(
+            "CREATE TABLE session(id TEXT PRIMARY KEY, directory TEXT, time_updated INTEGER);"
+        )
+        conn.execute(
+            "INSERT INTO session VALUES(?, 'F:/workspace/demo', 1700000000000)",
+            (f"cs-{sub}",),
+        )
+        conn.commit()
+        conn.close()
+    monkeypatch.setenv("CODEARTS_DOER_HOME", str(doer))
+    refs = CodeArtsProjects().extract()
+    assert len(refs) == 2
+    assert {r.session_id for r in refs} == {"cs-codearts-data", "cs-vscode-data"}
+    assert all(r.project == str(Path("F:/workspace/demo")) for r in refs)
+    assert all(r.ts == 1700000000 for r in refs)  # 毫秒 → 秒
+
+
+def test_codearts_empty_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("CODEARTS_DOER_HOME", str(tmp_path / "no-doer"))
+    assert CodeArtsProjects().extract() == []
 
 
 # ---- 标记文件扫描 --------------------------------------------------------

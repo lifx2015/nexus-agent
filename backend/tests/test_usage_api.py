@@ -122,7 +122,7 @@ def test_adapters_endpoint(client):
     _seed(store, _rec("a", agent="claude-code"))
     d = client.get("/api/v1/usage/adapters").json()
     assert {a["source"] for a in d["adapters"]} == {
-        "claude", "codex", "gemini", "opencode", "zcode", "workbuddy",
+        "claude", "codex", "gemini", "opencode", "zcode", "workbuddy", "codearts", "codebuddy", "codebuddy",
     }
     claude = next(a for a in d["adapters"] if a["source"] == "claude")
     assert claude["records"] == 1          # group_stats 的 key 列映射到此

@@ -1,4 +1,4 @@
-"""OpenCode 会话用量适配器。
+"""OpenCode 会话用量适配器（含 OpenCode 同构家族基类）。
 
 来源: opencode.db（SQLite），路径优先级 OPENCODE_DB > XDG_DATA_HOME > ~/.local/share。
 message.data(JSON) 中 role==assistant 且 time.completed 存在（跳过半截的
@@ -8,6 +8,10 @@ message.data(JSON) 中 role==assistant 且 time.completed 存在（跳过半截�
 WAL 坑：opencode.db 运行在 WAL 模式，新提交先落在 -wal，主库文件要 checkpoint
 才更新；因此门控 mtime 取 db 与 db-wal 二者较大值。增量按 session.time_updated
 水位（key 用 db_path:session_id）。
+
+家族基类 `_OpenCodeFamilyAdapter`：华为码道（CodeArts Agent）等 OpenCode 系
+产品的会话库与此完全同构，子类只需给出各自的 db_paths()（支持多库并存，
+增量游标按 (db_path, session_id) 命名空间天然隔离）。
 """
 from __future__ import annotations
 
@@ -32,38 +36,43 @@ def _resolve_db_path() -> Path | None:
     return p if p.exists() else None
 
 
-@register
-class OpenCodeAdapter(BaseUsageAdapter):
-    source = "opencode"
-    agent = "opencode"
-    name = "OpenCode"
+class _OpenCodeFamilyAdapter(BaseUsageAdapter):
+    """OpenCode 同构会话库家族基类（opencode.db 口径）。"""
+
+    source: str = ""
+    agent: str = ""
+    name: str = ""
+
+    def db_paths(self) -> list[Path]:
+        """候选 opencode.db 列表（存在的）。子类覆写。"""
+        return []
 
     def roots(self) -> list[Path]:
-        p = _resolve_db_path()
-        return [p.parent] if p else []
+        return [p.parent for p in self.db_paths()]
 
     def collect(self, store: UsageStore) -> SyncStats:
         stats = SyncStats(self.source)
-        db_path = _resolve_db_path()
-        if db_path is None:
-            return stats
+        for db_path in self.db_paths():
+            self._collect_db(store, db_path, stats)
+        return stats
 
+    def _collect_db(self, store: UsageStore, db_path: Path, stats: SyncStats) -> None:
         # 门控 mtime：WAL 模式下取主库与 -wal 较大值
         file_mtime = self._combined_mtime(db_path)
         gate_key = str(db_path)
         cur = store.get_state(self.source, gate_key)
         if cur and int(cur["seq"]) == file_mtime:
             stats.skipped += 1
-            stats.files_scanned = 1
-            return stats
-        stats.files_scanned = 1
+            stats.files_scanned += 1
+            return
+        stats.files_scanned += 1
 
         try:
             conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
             conn.row_factory = sqlite3.Row
         except sqlite3.Error as e:
             stats.errors.append(f"{db_path}: {e}")
-            return stats
+            return
 
         dir_by_session: dict[str, str] = {}
         try:
@@ -98,7 +107,6 @@ class OpenCodeAdapter(BaseUsageAdapter):
             stats.errors.append(f"{db_path}: {e}")
         finally:
             conn.close()
-        return stats
 
     @staticmethod
     def _combined_mtime(db_path: Path) -> int:
@@ -157,7 +165,7 @@ class OpenCodeAdapter(BaseUsageAdapter):
                 v = 0
             ts = v // 1000 if v > 100_000_000_000 else v  # 毫秒 → 秒（>1e11 判定为毫秒）
             rec = UsageRecord(
-                request_id=f"opencode_session:{session_id}:{r['id']}",
+                request_id=f"{self.source}_session:{session_id}:{r['id']}",
                 agent=self.agent,
                 model=str(value.get("modelID") or "unknown"),
                 ts=ts,
@@ -172,3 +180,14 @@ class OpenCodeAdapter(BaseUsageAdapter):
             if rec.has_billable():
                 out.append(rec)
         return out
+
+
+@register
+class OpenCodeAdapter(_OpenCodeFamilyAdapter):
+    source = "opencode"
+    agent = "opencode"
+    name = "OpenCode"
+
+    def db_paths(self) -> list[Path]:
+        p = _resolve_db_path()
+        return [p] if p else []

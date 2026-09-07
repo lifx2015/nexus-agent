@@ -195,6 +195,20 @@ SPECS: list[AgentSpec] = [
         project_dirs=[".pi"],
         project_files=["AGENTS.md"],
     ),
+    AgentSpec(
+        key="codearts",
+        name="码道 (CodeArts)",
+        vendor="Huawei",
+        # ~/.codeartsdoer：skills/ agents/ rule/ sandbox.json + codearts-data|vscode-data(opencode.db)
+        # ~/.codeartswork：Space 内核（kernel/sessions 会话 JSONL、skills/、agents/、mcp/ 等）
+        global_dirs=[
+            "~/.codeartsdoer",
+            "~/.codeartswork",
+            "%APPDATA%/codearts-agent/User/chat_sessions",
+        ],
+        project_dirs=[".codeartsdoer"],
+        project_files=[],
+    ),
     # 跨工具共享的 Agent Skills 目录（agentskills 约定：~/.agents/skills/<name>/SKILL.md）
     AgentSpec(
         key="agent-skills",

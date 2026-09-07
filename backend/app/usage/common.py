@@ -13,12 +13,22 @@ def expand_path(raw: str) -> Path:
 
 
 def parse_ts(value: object) -> int | None:
-    """解析 ISO8601/RFC3339 字符串为 unix 秒；失败返回 None。"""
+    """解析 ISO8601/RFC3339 字符串为 unix 秒；失败返回 None。
+
+    小数秒超过 6 位时截断（如码道 Space 的 .NET 纳秒时间戳
+    `2026-09-07T09:42:03.485007200Z`），datetime.fromisoformat 只认微秒。
+    """
     if not isinstance(value, str) or not value:
         return None
     text = value.strip()
     if text.endswith(("Z", "z")):
         text = text[:-1] + "+00:00"
+    if "." in text:
+        head, _, tail = text.partition(".")
+        digits = 0
+        while digits < len(tail) and tail[digits].isdigit():
+            digits += 1
+        text = f"{head}.{tail[:min(digits, 6)]}{tail[digits:]}"
     try:
         return int(datetime.fromisoformat(text).timestamp())
     except ValueError:
