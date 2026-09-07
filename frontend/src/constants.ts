@@ -35,3 +35,24 @@ export const SCAN_KIND_META: Record<string, { label: string; color: string }> = 
 }
 
 export const AGENT_COLORS = ['#4f8cff', '#22d3ee', '#a78bfa', '#f59e0b', '#f472b6', '#34d399', '#f87171', '#818cf8']
+
+/** 用户成长等级：按近 30 天 tokens 计算，0 → 10B 分 10 级，10B+ 满级 */
+export interface GrowthLevel {
+  level: number
+  name: string
+  threshold: number
+  color: string
+}
+
+export const GROWTH_LEVELS: GrowthLevel[] = [
+  { level: 1, name: '启程', threshold: 0, color: '#8a97ad' },
+  { level: 2, name: '探索', threshold: 50_000_000, color: '#4f8cff' },
+  { level: 3, name: '实践', threshold: 150_000_000, color: '#38bdf8' },
+  { level: 4, name: '熟练', threshold: 400_000_000, color: '#22d3ee' },
+  { level: 5, name: '精通', threshold: 800_000_000, color: '#2dd4bf' },
+  { level: 6, name: '专家', threshold: 1_500_000_000, color: '#34d399' },
+  { level: 7, name: '大师', threshold: 3_000_000_000, color: '#a3e635' },
+  { level: 8, name: '宗师', threshold: 5_000_000_000, color: '#fbbf24' },
+  { level: 9, name: '传奇', threshold: 8_000_000_000, color: '#f472b6' },
+  { level: 10, name: '王者', threshold: 10_000_000_000, color: '#f59e0b' },
+]

@@ -1,6 +1,8 @@
 """Nexus Agent - FastAPI 应用入口。"""
 from __future__ import annotations
 
+import sys
+
 from contextlib import asynccontextmanager
 
 from pathlib import Path
@@ -84,6 +86,10 @@ def health() -> dict:
 
 
 # 前端产物托管（须在 API 路由之后挂载）：桌面壳由 pywebview 直接打开本机地址
-STATIC_DIR = Path(__file__).parent / "static"
+# PyInstaller 打包后资源解包在 sys._MEIPASS 下，app/static 随 spec 的 datas 带入
+if getattr(sys, "frozen", False):
+    STATIC_DIR = Path(sys._MEIPASS) / "app" / "static"  # type: ignore[attr-defined]
+else:
+    STATIC_DIR = Path(__file__).parent / "static"
 if STATIC_DIR.exists():
     app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

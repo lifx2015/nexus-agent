@@ -5,12 +5,21 @@
 """
 from __future__ import annotations
 
+import os
 import socket
 import sys
 import threading
 import time
 import webbrowser
 from pathlib import Path
+
+# PyInstaller 无控制台模式下（console=False，双击运行）stdout/stderr 为 None
+# 或缺 isatty() 的空流，uvicorn 配置日志时会直接崩溃 —— 先替换为安全的空流
+if getattr(sys, "frozen", False):
+    if sys.stdout is None or not hasattr(sys.stdout, "isatty"):
+        sys.stdout = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
+    if sys.stderr is None or not hasattr(sys.stderr, "isatty"):
+        sys.stderr = open(os.devnull, "w", encoding="utf-8")  # noqa: SIM115
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent / "backend"
 sys.path.insert(0, str(BACKEND_DIR))

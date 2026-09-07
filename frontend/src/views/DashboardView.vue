@@ -13,6 +13,7 @@ import {
   usageApi,
 } from '@/api/client'
 import type {
+  AgentStatus,
   Asset,
   DiscoveredStats,
   HubCompareSummary,
@@ -23,9 +24,10 @@ import type {
   UsageBucket,
   UsageSummary,
 } from '@/api/client'
-import { KIND_LIST, KIND_META, SCAN_KIND_META } from '@/constants'
+import { GROWTH_LEVELS, AGENT_COLORS, KIND_LIST, KIND_META, SCAN_KIND_META } from '@/constants'
 import TrendChart from '@/components/TrendChart.vue'
 import { fmtCompact, fmtPct } from '@/utils/format'
+import { growthOf } from '@/utils/level'
 
 const router = useRouter()
 const stats = ref<Stats>({ by_kind: {}, totals: {}, total: 0 })
@@ -33,6 +35,7 @@ const recent = ref<Asset[]>([])
 const loading = ref(false)
 
 const agentsDetected = ref(0)
+const agentsList = ref<AgentStatus[]>([])
 const scanJob = ref<ScanJob | null>(null)
 const discovered = ref<DiscoveredStats | null>(null)
 const usage = ref<UsageSummary | null>(null)
@@ -66,6 +69,21 @@ const topScanKinds = computed(() => {
     .slice(0, 4)
 })
 
+/** 左列「智能体分布」：已检测到的 Agent，按发现资产数排序 */
+const agentChips = computed(() => {
+  const byAgent = discovered.value?.by_agent ?? {}
+  return agentsList.value
+    .filter((a) => a.detected)
+    .map((a, i) => ({
+      key: a.key,
+      name: a.name,
+      vendor: a.vendor,
+      count: byAgent[a.key] ?? 0,
+      color: AGENT_COLORS[i % AGENT_COLORS.length],
+    }))
+    .sort((x, y) => y.count - x.count)
+})
+
 // ---- 扫描状态 ---------------------------------------------------------------
 // 注意：扫描任务状态存于后端内存，应用重启后为 idle；是否「扫描过」须结合已入库的发现资产判断
 const scanning = ref(false)
@@ -95,6 +113,9 @@ const maxProjectTokens = computed(() =>
   topProjects.value.reduce((m, p) => Math.max(m, p.tokens), 0),
 )
 
+const tokens30 = computed(() => usage.value?.real_total_tokens ?? 0)
+const growth = computed(() => growthOf(tokens30.value))
+
 const hubSnapshotTime = computed(() => (hub.value.created_at ?? '').slice(5, 16))
 
 async function load() {
@@ -104,7 +125,7 @@ async function load() {
   midnight.setHours(0, 0, 0, 0)
   const [s, r, ag, sj, ds, us, ut, pj, hb, utd, u24] = await Promise.allSettled([
     systemApi.stats(),
-    assetsApi.list({ limit: 5 }),
+    assetsApi.list({ limit: 8 }),
     scanApi.agents(),
     scanApi.status(),
     discoveredApi.stats(),
@@ -117,8 +138,10 @@ async function load() {
   ])
   if (s.status === 'fulfilled') stats.value = s.value
   if (r.status === 'fulfilled') recent.value = r.value
-  if (ag.status === 'fulfilled')
+  if (ag.status === 'fulfilled') {
+    agentsList.value = ag.value
     agentsDetected.value = ag.value.filter((a) => a.detected).length
+  }
   if (sj.status === 'fulfilled') scanJob.value = sj.value
   if (ds.status === 'fulfilled') discovered.value = ds.value
   if (us.status === 'fulfilled') usage.value = us.value
@@ -130,7 +153,7 @@ async function load() {
     projectStats.value = pj.value.stats
     topProjects.value = [...pj.value.items]
       .sort((a, b) => b.tokens - a.tokens)
-      .slice(0, 5)
+      .slice(0, 7)
   }
   if (hb.status === 'fulfilled')
     hub.value = { summary: hb.value.summary, created_at: hb.value.created_at }
@@ -340,10 +363,95 @@ onMounted(() => {
             暂未发现项目。在「扫描中心」扫描后，会从各 Agent 会话日志回溯出你 AI 开发过的项目。
           </div>
         </div>
+
+        <!-- 智能体分布（本机检测到的 Agent 及资产数） -->
+        <div class="nx-card">
+          <div class="nx-card-head">
+            <el-icon color="#a78bfa"><Cpu /></el-icon>
+            <span class="nx-card-title">智能体分布</span>
+            <span class="nx-dim" style="font-size: 12px">
+              检测到 {{ agentsDetected }} 家 · 发现资产 {{ discovered?.total ?? 0 }} 条
+            </span>
+            <span class="nx-spacer" />
+            <el-button size="small" text type="primary" @click="router.push('/scan')">
+              进入扫描中心
+            </el-button>
+          </div>
+          <div v-if="agentChips.length" class="agent-grid">
+            <button
+              v-for="a in agentChips"
+              :key="a.key"
+              class="agent-cell"
+              :title="`${a.name} · ${a.vendor || '未知厂商'}`"
+              @click="router.push('/scan')"
+            >
+              <span class="agent-dot" :style="{ background: a.color }" />
+              <span class="agent-name">{{ a.name }}</span>
+              <span class="agent-count">{{ a.count }}</span>
+            </button>
+          </div>
+          <div v-else class="nx-empty" style="padding: 24px 0">
+            尚未检测到本机 Agent，去「扫描中心」执行一次扫描。
+          </div>
+        </div>
       </div>
 
-      <!-- 侧列：扫描中心 + 流量统计 + 技能仓库 -->
+      <!-- 侧列：成长等级 + 扫描中心 + 流量统计 + 技能仓库 -->
       <div class="nx-dash-side">
+        <div class="nx-card">
+          <div class="nx-card-head">
+            <el-icon color="#fbbf24"><Medal /></el-icon>
+            <span class="nx-card-title">成长等级</span>
+            <span class="nx-spacer" />
+            <el-popover placement="bottom-end" :width="280" trigger="click">
+              <template #reference>
+                <button class="nx-link nx-link--primary">等级说明</button>
+              </template>
+              <div class="nx-lv-guide">
+                <div
+                  v-for="g in GROWTH_LEVELS"
+                  :key="g.level"
+                  class="nx-lv-guide-row"
+                  :class="{ on: g.level <= growth.current.level }"
+                >
+                  <span class="nx-lv-guide-dot" :style="{ background: g.color }" />
+                  <span class="nx-lv-guide-name">Lv.{{ g.level }} {{ g.name }}</span>
+                  <span class="nx-lv-guide-th">
+                    {{ g.threshold === 0 ? '0' : fmtCompact(g.threshold) }}+ tokens
+                  </span>
+                  <el-icon v-if="g.level <= growth.current.level" color="var(--nx-success)">
+                    <Check />
+                  </el-icon>
+                </div>
+                <div class="nx-lv-guide-note">
+                  按近 30 天真实处理 tokens 计算（输入+输出+缓存），10B+ 为满级王者。
+                </div>
+              </div>
+            </el-popover>
+          </div>
+          <div class="nx-lv-row">
+            <div
+              class="nx-lv-badge"
+              :style="{ '--lv-color': growth.current.color, '--lv-progress': growth.progressPct }"
+            >
+              <div class="nx-lv-badge-inner">Lv.{{ growth.current.level }}</div>
+            </div>
+            <div class="nx-lv-info">
+              <div class="nx-lv-name" :style="{ color: growth.current.color }">
+                {{ growth.current.name }}
+              </div>
+              <div class="nx-lv-tokens">近 30 天 {{ fmtCompact(tokens30) }} tokens</div>
+              <div class="nx-lv-next">
+                {{
+                  growth.next
+                    ? `距「Lv.${growth.next.level} ${growth.next.name}」还需 ${fmtCompact(growth.next.threshold - tokens30)}`
+                    : '已达最高等级 · 王者'
+                }}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="nx-card">
           <div class="nx-card-head">
             <el-icon color="#22d3ee"><Aim /></el-icon>
@@ -549,7 +657,7 @@ onMounted(() => {
 
 .nx-dash-cols {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) 392px;
   gap: 16px;
 }
 
@@ -576,6 +684,20 @@ onMounted(() => {
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+}
+
+/* 两列底部对齐：较矮一侧由最后一张卡片撑满剩余高度 */
+.nx-dash-side > .nx-card:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.nx-dash-side > .nx-card:last-child .nx-side-kv {
+  margin-bottom: 14px;
+}
+.nx-dash-side > .nx-card:last-child .nx-side-actions {
+  margin-top: auto;
 }
 
 .nx-side-metric {
@@ -633,6 +755,99 @@ onMounted(() => {
   border-top: 1px solid var(--nx-border-soft);
 }
 
+/* 成长等级徽标 */
+.nx-lv-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.nx-lv-badge {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    var(--lv-color) calc(var(--lv-progress) * 1%),
+    var(--nx-bg-hover) 0
+  );
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--lv-color) 30%, transparent);
+}
+.nx-lv-badge-inner {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--nx-bg-elevated);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--lv-color);
+  font-variant-numeric: tabular-nums;
+}
+.nx-lv-info {
+  min-width: 0;
+}
+.nx-lv-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.nx-lv-tokens {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--nx-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.nx-lv-next {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--nx-text-faint);
+}
+
+/* 等级说明弹层 */
+.nx-lv-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nx-lv-guide-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--nx-text-faint);
+}
+.nx-lv-guide-row.on {
+  color: var(--nx-text);
+  background: var(--nx-bg-soft);
+}
+.nx-lv-guide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  flex: none;
+}
+.nx-lv-guide-name {
+  flex: 1;
+}
+.nx-lv-guide-th {
+  font-variant-numeric: tabular-nums;
+  color: var(--nx-text-faint);
+}
+.nx-lv-guide-note {
+  margin-top: 8px;
+  padding: 8px 6px 2px;
+  border-top: 1px solid var(--nx-border-soft);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--nx-text-faint);
+}
+
 /* 今日 / 24h 迷你统计 */
 .nx-mini-grid {
   display: grid;
@@ -663,6 +878,51 @@ onMounted(() => {
   font-size: 11px;
   color: var(--nx-text-faint);
   font-variant-numeric: tabular-nums;
+}
+
+/* 智能体分布网格 */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+.agent-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--nx-border-soft);
+  border-radius: var(--nx-r-sm);
+  background: var(--nx-bg-soft);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s var(--nx-ease), background 0.15s var(--nx-ease),
+    transform 0.15s var(--nx-ease);
+}
+.agent-cell:hover {
+  border-color: color-mix(in srgb, var(--nx-accent) 45%, var(--nx-border-soft));
+  background: var(--nx-bg-hover);
+  transform: translateY(-1px);
+}
+.agent-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  flex: none;
+}
+.agent-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.agent-count {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--nx-text-dim);
 }
 
 /* 项目用量行 */
