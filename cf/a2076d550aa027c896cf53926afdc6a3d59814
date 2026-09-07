@@ -1,0 +1,42 @@
+frontend/src/constants.ts
+  s_638e159261bd13::t_d2602fb704512e 39,49-57
+backend/app/static/assets/DashboardView-DEXSRKny.css
+  s_638e159261bd13::t_835a2dd7785a0f 1
+backend/app/static/assets/SkillsView-B54SEtti.js
+  s_638e159261bd13::t_835a2dd7785a0f 1
+backend/app/static/assets/AssetView-Cr5g-1iZ.js
+  s_638e159261bd13::t_835a2dd7785a0f 1-67
+backend/app/static/assets/ScanView-BXT9RXMF.js
+  s_638e159261bd13::t_835a2dd7785a0f 1
+backend/app/static/assets/DashboardView-D9POSAJe.js
+  s_638e159261bd13::t_835a2dd7785a0f 1
+backend/app/static/index.html
+  s_638e159261bd13::t_835a2dd7785a0f 7
+frontend/src/views/DashboardView.vue
+  s_638e159261bd13::t_9b3176359c25ad 427
+backend/app/static/assets/ScanProgress-DkKOqk_q.js
+  s_638e159261bd13::t_835a2dd7785a0f 1
+backend/app/static/assets/ProjectsView-C5WN8Tw9.js
+  s_638e159261bd13::t_835a2dd7785a0f 1
+backend/app/static/assets/index-BV3i9WC4.js
+  s_638e159261bd13::t_835a2dd7785a0f 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.32",
+  "base_commit_sha": "cfa2076d550aa027c896cf53926afdc6a3d59814",
+  "prompts": {},
+  "sessions": {
+    "s_638e159261bd13": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f93b2daa1ffegGqbf2gyg45wJk",
+        "model": "unknown"
+      },
+      "human_author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>",
+      "custom_attributes": {
+        "internal_commit_event_allowlist": "codeup.aliyun.com,codeup-*"
+      }
+    }
+  }
+}
