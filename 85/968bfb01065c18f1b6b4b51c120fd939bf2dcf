@@ -1,0 +1,92 @@
+desktop/main.py
+  s_5d2139cac65aad::t_161040f16cd704 8,16-22
+  s_5d2139cac65aad::t_9c5111c3627bbf 23
+backend/app/static/assets/AssetView-C_7z6-HO.js
+  s_8a41306351c535::t_e43d6332a70675 1-67
+frontend/src/constants.ts
+  s_638e159261bd13::t_438664a4fdf89c 38-58
+backend/app/static/assets/DashboardView-DObj1Vhq.js
+  s_8a41306351c535::t_e43d6332a70675 1
+backend/app/static/assets/DashboardView-DPtHCOAu.css
+  s_8a41306351c535::t_e43d6332a70675 1
+frontend/src/views/DashboardView.vue
+  s_8a41306351c535::t_d90db9fcef97f0 366-396
+  s_8a41306351c535::t_87167e1966f854 141-142,144
+  s_8a41306351c535::t_d9dcb31a162f76 128
+  s_638e159261bd13::t_0c774e0684d521 399,401-454
+  s_8a41306351c535::t_84a1205d29e241 156
+  s_8a41306351c535::t_3f18f8c310f759 660
+  s_8a41306351c535::t_84c298a2e82ba1 72-86
+  s_8a41306351c535::t_fe37b00e578908 689-702
+  s_8a41306351c535::t_d23d630d6d4811 16
+  s_8a41306351c535::t_fd4a72fa1aa459 27
+  s_8a41306351c535::t_3648fcb5df9322 38
+  s_638e159261bd13::t_de1c09c85739e6 758-850
+  s_638e159261bd13::t_dabeb32d86aad7 30
+  s_8a41306351c535::t_35b926c70d2c70 883-927
+  s_638e159261bd13::t_4bb6fb5d13431f 116-118
+backend/app/static/assets/ProjectsView-cL9Mb_xZ.js
+  s_8a41306351c535::t_e43d6332a70675 1
+backend/app/static/assets/ScanProgress-C-rkmpOn.js
+  s_8a41306351c535::t_e43d6332a70675 1
+backend/app/static/assets/index-v5_tzkwc.js
+  s_8a41306351c535::t_e43d6332a70675 1-2
+backend/requirements-dev.txt
+  s_5d2139cac65aad::t_8cbb8ed916e107 4
+frontend/src/utils/level.ts
+  s_638e159261bd13::t_df0b9230b16aad 1-22
+backend/app/main.py
+  s_5d2139cac65aad::t_9a716c5b2a42b2 4-5
+  s_5d2139cac65aad::t_1fe1a9153967af 89-93
+backend/app/static/assets/ScanView-cgvAldI6.js
+  s_8a41306351c535::t_e43d6332a70675 1
+backend/app/static/assets/SkillsView-B3_DNa9r.js
+  s_8a41306351c535::t_e43d6332a70675 1
+backend/app/static/index.html
+  s_8a41306351c535::t_e43d6332a70675 7
+NexusAgent.spec
+  s_5d2139cac65aad::t_a4a0792a50b8f3 53-58
+  s_5d2139cac65aad::t_4320866ace7a02 1-52,59-75,77-86
+  s_5d2139cac65aad::t_2e57bf2dacdc79 76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.32",
+  "base_commit_sha": "85968bfb01065c18f1b6b4b51c120fd939bf2dcf",
+  "prompts": {},
+  "sessions": {
+    "s_5d2139cac65aad": {
+      "agent_id": {
+        "tool": "zcode",
+        "id": "sess_218ae2f5-d8f2-4e56-93aa-2863e117407c",
+        "model": "unknown"
+      },
+      "human_author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>",
+      "custom_attributes": {
+        "internal_commit_event_allowlist": "codeup.aliyun.com,codeup-*"
+      }
+    },
+    "s_638e159261bd13": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f93b2daa1ffegGqbf2gyg45wJk",
+        "model": "unknown"
+      },
+      "human_author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>",
+      "custom_attributes": {
+        "internal_commit_event_allowlist": "codeup.aliyun.com,codeup-*"
+      }
+    },
+    "s_8a41306351c535": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9114f246ffen5qbs0g7UvySko",
+        "model": "unknown"
+      },
+      "human_author": "DeepCode <8362239+deep-note@user.noreply.gitee.com>",
+      "custom_attributes": {
+        "internal_commit_event_allowlist": "codeup.aliyun.com,codeup-*"
+      }
+    }
+  }
+}
